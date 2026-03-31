@@ -1,15 +1,20 @@
 import { BottomSheet } from '@alfalab/core-components/bottom-sheet/cssm';
 import { Button } from '@alfalab/core-components/button/cssm';
 import { Gap } from '@alfalab/core-components/gap/cssm';
+import { PureCell } from '@alfalab/core-components/pure-cell/cssm';
+import { Radio } from '@alfalab/core-components/radio/cssm';
 import { Tag } from '@alfalab/core-components/tag/cssm';
 import { Typography } from '@alfalab/core-components/typography/cssm';
 import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import onB1Img from './assets/on_b_1.png';
+import onB2Img from './assets/on_b_2.png';
 import { ExpandableText } from './expand/ExpandableText';
 import { useStocksData } from './hooks/useStocksData';
 import { LS, LSKeys } from './ls';
 import { appSt } from './style.css';
 import { QuestionItem } from './types';
+
 const CATEGORY_ALL = 'Все';
 
 type CategoryPillProps = {
@@ -42,9 +47,29 @@ const quickStakeValues = [100, 200, 300, 500] as const;
 
 const LINK =
   'alfabank://sdui_screen?screenName=InvestmentLongread&fromCurrent=true&shouldUseBottomSafeArea=true&endpoint=v1/invest-main-screen-view/investment-longread/98955%3flocation=AM%26campaignCode=GH';
-
+const answers = [
+  {
+    id: 1,
+    answer: 'Ничего, это просто голосование',
+  },
+  {
+    id: 2,
+    answer: 'Потеряю поставленные баллы кешбэка',
+  },
+  {
+    id: 3,
+    answer: 'Спишут деньги с карты',
+  },
+  {
+    id: 4,
+    answer: 'Не уверен',
+  },
+];
 export const App = () => {
-  const [showBs, setShowBs] = useState(false);
+  const [showBs, setShowBs] = useState(true);
+  const [finalAnswer, setFinalAnswer] = useState<string>('');
+  const [view, setView] = useState<'final' | 'answer'>('answer');
+  const [boardingStep, setBoardingStep] = useState(0);
   const [stakeAmount, setStakeAmount] = useState(0);
   const { questions } = useStocksData();
   const [answerData, setAnswerData] = useState<{
@@ -69,6 +94,41 @@ export const App = () => {
   const submit = () => {
     window.location.replace(LINK);
   };
+
+  if (view === 'final') {
+    return (
+      <>
+        <div className={appSt.container}>
+          <Typography.Title tag="h1" view="medium" weight="semibold" font="system" style={{ marginTop: '1rem' }}>
+            Как вы поняли, что будет если не угадаете?
+          </Typography.Title>
+
+          {answers.map(dataAnswer => (
+            <PureCell
+              onClick={() => {
+                setFinalAnswer(dataAnswer.answer);
+              }}
+              className={appSt.cellAnswer}
+            >
+              <PureCell.Content>
+                <PureCell.Main>
+                  <Typography.Text view="primary-medium">{dataAnswer.answer}</Typography.Text>
+                </PureCell.Main>
+              </PureCell.Content>
+              <PureCell.Addon verticalAlign="center">
+                <Radio checked={finalAnswer === dataAnswer.answer} onChange={() => setFinalAnswer(dataAnswer.answer)} />
+              </PureCell.Addon>
+            </PureCell>
+          ))}
+        </div>
+        <div className={appSt.bottomBtn}>
+          <Button onClick={submit} type="button" block view="primary" disabled={!finalAnswer}>
+            Ответить
+          </Button>
+        </div>
+      </>
+    );
+  }
 
   if (answerData) {
     const selectedCoeff = answerData.answer === 'yes' ? answerData.question.yesX : answerData.question.noX;
@@ -136,7 +196,13 @@ export const App = () => {
         >
           <div className={appSt.sheetContent}>
             <div className={appSt.sheetQuestionCard}>
-              <img src={answerData.question.img} width={50} height={50} alt={answerData.question.question} />
+              <img
+                src={answerData.question.img}
+                width={50}
+                height={50}
+                alt={answerData.question.question}
+                className={appSt.img}
+              />
 
               <div className={appSt.sheetQuestionCopy}>
                 <Typography.Text tag="p" view="primary-medium" weight="medium" defaultMargins={false}>
@@ -205,7 +271,9 @@ export const App = () => {
               view="primary"
               className={appSt.sheetSubmitButton}
               disabled={stakeAmount === 0}
-              onClick={submit}
+              onClick={() => {
+                setView('final');
+              }}
             >
               Поставить кешбэк
             </Button>
@@ -239,7 +307,7 @@ export const App = () => {
         {filteredQuestions.map(question => (
           <div key={question.question} className={appSt.box}>
             <div className={appSt.rowImg}>
-              <img src={question.img} width={48} height={48} alt={question.question} />
+              <img src={question.img} width={48} height={48} alt={question.question} className={appSt.img} />
               <Typography.Text view="primary-medium" color="primary">
                 {question.question}
               </Typography.Text>
@@ -282,6 +350,48 @@ export const App = () => {
         ))}
       </div>
       <Gap size={96} />
+      <BottomSheet
+        open={showBs}
+        onClose={() => {
+          setShowBs(false);
+        }}
+        contentClassName={appSt.btmContent}
+        hasCloser
+        actionButton={
+          <Button
+            block
+            size={56}
+            view="primary"
+            onClick={() => {
+              if (boardingStep === 1) {
+                setShowBs(false);
+              } else {
+                setBoardingStep(boardingStep + 1);
+              }
+            }}
+          >
+            {boardingStep === 0 ? 'Далее' : 'Начать'}
+          </Button>
+        }
+      >
+        <img
+          src={boardingStep === 0 ? onB1Img : onB2Img}
+          width="100%"
+          height={208}
+          style={{ objectFit: 'cover' }}
+          alt="Онбординг"
+        />
+        <div className={appSt.container}>
+          <Typography.TitleResponsive tag="h3" view="small" font="system" weight="medium">
+            {boardingStep === 0 ? 'Выберите рынок' : 'Ставьте кешбэк и выигрывайте рублями'}
+          </Typography.TitleResponsive>
+          <Typography.Text view="primary-medium" color="primary">
+            {boardingStep === 0
+              ? 'Ставьте на «Да» или «Нет» — и следите за рынком в реальном времени\nКоэффициенты меняются по мере того, как другие участники делают ставки.'
+              : '1 балл = 1 ₽. Делайте ставки накопленным кешбэком, а после выигрыша — выводите деньги или играйте дальше.'}
+          </Typography.Text>
+        </div>
+      </BottomSheet>
     </>
   );
 };
