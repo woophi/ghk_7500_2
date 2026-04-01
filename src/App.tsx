@@ -85,13 +85,35 @@ export const App = () => {
     if (!LS.getItem(LSKeys.UserId, null)) {
       LS.setItem(LSKeys.UserId, Date.now());
     }
+    window.gtag('event', '7500_onboarding_impression_step1');
   }, []);
+
+  useEffect(() => {
+    if (!answerData && !showBs) {
+      window.gtag('event', '7500_selection_impression', { var: 'var2' });
+    }
+
+    if (answerData) {
+      window.gtag('event', '7500_event_impression', { var: 'var2', question: answerData.question.question });
+    }
+
+    if (showBs && answerData) {
+      window.gtag('event', '7500_bet_impression', { var: 'var2', question: answerData.question.question });
+    }
+  }, [answerData, showBs]);
+  useEffect(() => {
+    if (view === 'final') {
+      window.gtag('event', '7500_quiz_impression', { var: 'var2' });
+    }
+  }, [view]);
 
   const setStake = (value: number) => {
     setStakeAmount(Math.max(0, value));
   };
 
   const submit = () => {
+    window.gtag('event', '7500_quiz_answer', { var: 'var2', answer: finalAnswer });
+
     window.location.replace(LINK);
   };
 
@@ -168,6 +190,11 @@ export const App = () => {
             style={{ backgroundColor: '#8EE29C' }}
             view="secondary"
             onClick={() => {
+              window.gtag('event', '7500_answer_click_event', {
+                var: 'var2',
+                question: answerData.question.question,
+                answer: 'yes',
+              });
               setAnswerData({ question: answerData.question, answer: 'yes' });
               setShowBs(true);
             }}
@@ -180,6 +207,12 @@ export const App = () => {
             style={{ backgroundColor: '#FCB1A7' }}
             view="secondary"
             onClick={() => {
+              window.gtag('event', '7500_answer_click_event', {
+                var: 'var2',
+                question: answerData.question.question,
+                answer: 'no',
+              });
+
               setAnswerData({ question: answerData.question, answer: 'no' });
               setShowBs(true);
             }}
@@ -272,6 +305,12 @@ export const App = () => {
               className={appSt.sheetSubmitButton}
               disabled={stakeAmount === 0}
               onClick={() => {
+                window.gtag('event', '7500_bet_click', {
+                  var: 'var2',
+                  question: answerData.question.question,
+                  answer: answerData.answer,
+                  bet_size: stakeAmount.toString(),
+                });
                 setView('final');
               }}
             >
@@ -329,6 +368,11 @@ export const App = () => {
                 style={{ backgroundColor: '#8EE29C' }}
                 view="secondary"
                 onClick={() => {
+                  window.gtag('event', '7500_answer_click_selection', {
+                    var: 'var2',
+                    question: question.question,
+                    answer: 'yes',
+                  });
                   setAnswerData({ question, answer: 'yes' });
                 }}
               >
@@ -340,6 +384,11 @@ export const App = () => {
                 style={{ backgroundColor: '#FCB1A7' }}
                 view="secondary"
                 onClick={() => {
+                  window.gtag('event', '7500_answer_click_selection', {
+                    var: 'var2',
+                    question: question.question,
+                    answer: 'no',
+                  });
                   setAnswerData({ question, answer: 'no' });
                 }}
               >
@@ -364,9 +413,12 @@ export const App = () => {
             view="primary"
             onClick={() => {
               if (boardingStep === 1) {
+                window.gtag('event', '7500_onboarding_click_step2');
                 setShowBs(false);
               } else {
+                window.gtag('event', '7500_onboarding_click_step1');
                 setBoardingStep(boardingStep + 1);
+                window.gtag('event', '7500_onboarding_impression_step2');
               }
             }}
           >
